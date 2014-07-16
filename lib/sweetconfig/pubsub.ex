@@ -12,32 +12,31 @@ defmodule Sweetconfig.Pubsub do
     {:ok, state()}
   end
 
-  def subscribe(server, path, handler) do
-    GenServer.call(server, {:subscribe, path, handler})
+  def subscribe(server, path, events, handler) do
+    GenServer.call(server, {:subscribe, path, events, handler})
   end
 
-  def notify(server, path, old_val, new_val) do
-    GenServer.cast(server, {:notify, path, old_val, new_val})
+  def get_subscribers(server, root) do
+    GenServer.call(server, {:get_subscribers, root})
   end
 
   ###
 
-  def handle_call({:subscribe, path, handler}, _from, state(subscribers: subs, monitors: mons)=state) do
+  def handle_call({:subscribe, path, events, handler}, _from, state(subscribers: subs, monitors: mons)=state) do
     new_mons = case handler do
       {:pid, pid} ->
         mon = Process.monitor(pid)
         Map.put(mons, mon, path)
       _ -> mons
     end
-    new_subs = Map.update(subs, path, [handler], &[handler|&1])
+    item = {handler, events}
+    new_subs = Map.update(subs, path, [item], &[item|&1])
     {:reply, :ok, state(state, subscribers: new_subs, monitors: new_mons)}
   end
 
-  def handle_cast({:notify, path, old_val, new_val}, state(subscribers: subs)=state) do
-    # FIXME: is it safe to call handlers in the server's process or should we
-    # spawn_link them?
-    Enum.each(Map.get(subs, path, []), &notify_subscriber(&1, path, old_val, new_val))
-    {:noreply, state}
+  def handle_call({:get_subscribers, root}, _from, state(subscribers: subs)=state) do
+    matching_subs = Enum.filter(subs, fn {[h|_], _} -> h == root end)
+    {:reply, matching_subs, state}
   end
 
   def handle_info({:DOWN, monitor, _type, pid, _info}, state(subscribers: subs, monitors: mons)=state) do
@@ -48,16 +47,16 @@ defmodule Sweetconfig.Pubsub do
 
   ###
 
-  defp notify_subscriber({:pid, pid}, path, old_val, new_val) do
-    send(pid, {__MODULE__, path, old_val, new_val})
+  def notify_subscriber({:pid, pid}, path, change) do
+    send(pid, {__MODULE__, path, change})
   end
 
-  defp notify_subscriber({:func, f}, path, old_val, new_val) do
-    f.({path, old_val, new_val})
+  def notify_subscriber({:func, f}, path, change) do
+    f.({path, change})
   end
 
-  defp notify_subscriber({:mfa, {m, f, args}}, path, old_val, new_val) do
-    apply(m, f, args ++ [{path, old_val, new_val}])
+  def notify_subscriber({:mfa, {m, f, args}}, path, change) do
+    apply(m, f, args ++ [{path, change}])
   end
 
   defp delete_all_matching(list, val) do

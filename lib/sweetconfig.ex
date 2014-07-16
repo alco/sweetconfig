@@ -11,10 +11,14 @@ defmodule Sweetconfig do
     ]
 
     :sweetconfig = :ets.new(:sweetconfig, [:named_table, {:read_concurrency, true}, :public, :protected])
-    _ = Sweetconfig.Utils.load_configs
+    _ = Sweetconfig.Utils.load_configs(:silent)
 
     opts = [strategy: :one_for_one, name: Sweetconfig.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  def purge() do
+    :ets.delete_all_objects :sweetconfig
   end
 
   @type config :: [{term,term}]
@@ -65,27 +69,42 @@ defmodule Sweetconfig do
   If the 2nd argument is a pid, a message will be sent to it that will have the
   following shape:
 
-      {Sweetconfig.Pubsub, <path>, <old_value>, <new_value>}
+      {Sweetconfig.Pubsub, <path>, <change>}
 
   If the 2nd argument is a function, it will be invoked with a tuple
-  `{<path>, <old_value>, <new_value>}`.
+  `{<path>, <change>}`.
 
   If the 2nd argument is a tuple `{<module>, <function>, <args>}`, the function
-  `<module>.<function>` will be called with `<args>` after `{<path>,
-  <old_value>, <new_value>}` appended to the args.
+  `<module>.<function>` will be called with `<args>` after `{<path>, <change>}`
+  appended to the args.
+
+  `<change>` can be one of the following (depending on the value of the
+  `events` argument):
+
+    * `{:changed, old_val, new_val}` – the value was changed
+    * `{:added, new_val}` – the value was added where previously there was no
+      value or it was `nil`
+    * `{:removed, old_val}` – the value was removed or set to `nil`
+
   """
-  @spec subscribe([term], pid | function | {atom,atom,[term]}) :: :ok
+  @spec subscribe([term],
+                  [:changed | :added | :removed] | :all,
+                  pid | function | {atom,atom,[term]}) :: :ok
 
-  def subscribe(path, pid) when is_pid(pid) do
-    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:pid, pid})
+  def subscribe(path, events \\ [:changed], handler) do
+    handler = case handler do
+      pid when is_pid(pid)     -> {:pid, pid}
+      f when is_function(f, 1) -> {:func, f}
+      {_mod, _func, _args}=mfa -> {:mfa, mfa}
+    end
+    unless events == :all, do: events = List.wrap(events)
+    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, events, handler)
   end
 
-  def subscribe(path, f) when is_function(f, 1) do
-    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:func, f})
-  end
-
-  def subscribe(path, {_mod, _func, _args}=mfa) do
-    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:mfa, mfa})
+  @doc false
+  # this function is called internally when configs are reloaded
+  def get_subscribers(root) do
+    Sweetconfig.Pubsub.get_subscribers(@pubsub_server, root)
   end
 
   ###

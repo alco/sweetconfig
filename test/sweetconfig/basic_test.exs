@@ -1,5 +1,10 @@
-defmodule SweetconfigTest do
+defmodule SweetconfigTest.BasicTest do
   use ExUnit.Case
+
+  setup_all do
+    Sweetconfig.Utils.load_configs :silent
+    :ok
+  end
 
   test "it works" do
     assert %{pool: ["127.0.0.1", "127.0.0.2"]} = Sweetconfig.get(:cqlex)

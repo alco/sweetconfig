@@ -3,7 +3,8 @@ Sweetconfig
 
 [![Build Status](https://travis-ci.org/d0rc/sweetconfig.png?branch=master "Build Status")](http://travis-ci.org/d0rc/sweetconfig)
 
-Place configuration YAML files in `priv/` directory of your root application. Add following section to your `config.exs` file:
+Place configuration YAML files in `priv/` directory of your root application.
+Add following section to your `config.exs` file:
 
 
 ```elixir
@@ -15,15 +16,28 @@ config :sweetconfig,
 Include `:sweetconfig` into your app deps list.
 
 
-Now you can read configuration from any point at your app like this:
+Now you can read configuration from any point in your app like this:
 
 
 ```elixir
-	Sweetconfig.get :somekey
-	Sweetconfig.get [:somekey, :somesubkey]
-	Sweetconfig.get :whatever, :default_value
+Sweetconfig.get :somekey
+Sweetconfig.get [:somekey, :somesubkey]
+Sweetconfig.get :whatever, :default_value
 ```
 
 
-TBD: notification service on configuration changes.
+## Subscribing to changes
 
+It is possible to get notifications when a certain config values has changed
+during config reload.
+
+```elixir
+path = [:root, :some, "nested", "value"], self()
+Sweetconfig.subscribe path
+Sweetconfig.Utils.load_configs  # assume this changes the value at the path above
+receive do
+  {Sweetconfig.Pubsub, ^path, {:changed, old, new}} ->
+    IO.inspect old
+    IO.inspect new
+end
+```
