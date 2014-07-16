@@ -18,8 +18,9 @@ defmodule SweetconfigTest.PubsubTest do
     load_from_fixture "new"
     :timer.sleep(100)
 
+    new_section = %{creds: %{username: "somename"}}
     assert_receive {Sweetconfig.Pubsub, [:cqlex, :new_key], {:added, "value"}}
-    assert_receive {Sweetconfig.Pubsub, [:new_section], {:added, %{}}}
+    assert_receive {Sweetconfig.Pubsub, [:new_section], {:added, ^new_section}}
     assert_receive {Sweetconfig.Pubsub, [:new_section, :creds, :username], {:added, "somename"}}
     refute_receive _
   end
@@ -42,9 +43,11 @@ defmodule SweetconfigTest.PubsubTest do
 
     load_from_fixture "changed"
 
+    test_queue = %{host: '127.0.0.1', username: "somename"}
+    cqlex = %{pool: ["127.0.0.1", "127.0.0.2"]}
     assert_receive {Sweetconfig.Pubsub, [:exrabbit, :test_queue, :host], {:removed, '127.0.0.1'}}
-    assert_receive {Sweetconfig.Pubsub, [:exrabbit, :test_queue], {:removed, %{}}}
-    assert_receive {Sweetconfig.Pubsub, [:cqlex], {:removed, %{}}}
+    assert_receive {Sweetconfig.Pubsub, [:exrabbit, :test_queue], {:removed, ^test_queue}}
+    assert_receive {Sweetconfig.Pubsub, [:cqlex], {:removed, ^cqlex}}
     refute_receive _
   end
 
