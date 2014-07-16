@@ -32,8 +32,8 @@ It is possible to get notifications when a certain config values has changed
 during config reload.
 
 ```elixir
-path = [:root, :some, "nested", "value"], self()
-Sweetconfig.subscribe path
+path = [:root, :some, "nested", "value"]
+Sweetconfig.subscribe path, self()
 Sweetconfig.Utils.load_configs  # assume this changes the value at the path above
 receive do
   {Sweetconfig.Pubsub, ^path, {:changed, old, new}} ->
