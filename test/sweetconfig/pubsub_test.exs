@@ -72,6 +72,19 @@ defmodule SweetconfigTest.PubsubTest do
     refute_receive _
   end
 
+  test "dead subscriber" do
+    pid = spawn(fn -> receive do :die -> :ok end end)
+
+    assert [] = Sweetconfig.get_subscribers(:exrabbit)
+    Sweetconfig.subscribe [:exrabbit, :test_queue, :host], :all, pid
+    refute [] = Sweetconfig.get_subscribers(:exrabbit)
+
+    send(pid, :die)
+    :timer.sleep(50)
+    refute Process.alive?(pid)
+    assert [] = Sweetconfig.get_subscribers(:exrabbit)
+  end
+
   defp load_from_fixture(name) do
     path = Path.join([Path.expand("..", __DIR__), "fixtures", name])
     Sweetconfig.Utils.load_configs(path)

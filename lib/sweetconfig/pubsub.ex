@@ -41,7 +41,10 @@ defmodule Sweetconfig.Pubsub do
 
   def handle_info({:DOWN, monitor, _type, pid, _info}, state(subscribers: subs, monitors: mons)=state) do
     {path, new_mons} = Map.pop(mons, monitor)
-    new_subs = Map.update!(subs, path, &delete_all_matching(&1, {:pid, pid}))
+    new_subs = case delete_all_matching(Map.get(subs, path), {:pid, pid}) do
+      [] -> Map.delete(subs, path)
+      other -> Map.put(subs, path, other)
+    end
     {:noreply, state(state, subscribers: new_subs, monitors: new_mons)}
   end
 
@@ -60,7 +63,7 @@ defmodule Sweetconfig.Pubsub do
   end
 
   defp delete_all_matching(list, val) do
-    List.foldl(list, [], fn item, acc ->
+    List.foldl(list, [], fn {item, _}, acc ->
       case item do
         ^val -> acc
         _    -> [item|acc]
