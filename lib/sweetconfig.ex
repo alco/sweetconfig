@@ -1,17 +1,16 @@
 defmodule Sweetconfig do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
+  @pubsub_server Sweetconfig.Pubsub
+
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
+    import Supervisor.Spec
 
     children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Sweetconfig.Worker, [arg1, arg2, arg3])
+      worker(Sweetconfig.Pubsub, [@pubsub_server])
     ]
 
-    :sweetconfig = :ets.new :sweetconfig, [:named_table, {:read_concurrency, true}, :public, :protected]
+    :sweetconfig = :ets.new(:sweetconfig, [:named_table, {:read_concurrency, true}, :public, :protected])
     _ = Sweetconfig.Utils.load_configs
 
     opts = [strategy: :one_for_one, name: Sweetconfig.Supervisor]
@@ -58,6 +57,38 @@ defmodule Sweetconfig do
         end
     end
   end
+
+  @doc """
+  Subscribe to notifications emitted whenever the specified config value
+  changes.
+
+  If the 2nd argument is a pid, a message will be sent to it that will have the
+  following shape:
+
+      {Sweetconfig.Pubsub, <path>, <old_value>, <new_value>}
+
+  If the 2nd argument is a function, it will be invoked with a tuple
+  `{<path>, <old_value>, <new_value>}`.
+
+  If the 2nd argument is a tuple `{<module>, <function>, <args>}`, the function
+  `<module>.<function>` will be called with `<args>` after `{<path>,
+  <old_value>, <new_value>}` appended to the args.
+  """
+  @spec subscribe([term], pid | function | {atom,atom,[term]}) :: :ok
+
+  def subscribe(path, pid) when is_pid(pid) do
+    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:pid, pid})
+  end
+
+  def subscribe(path, f) when is_function(f, 1) do
+    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:func, f})
+  end
+
+  def subscribe(path, {_mod, _func, _args}=mfa) do
+    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, {:mfa, mfa})
+  end
+
+  ###
 
   defp lookup_config(config, []), do: config
   defp lookup_config(config, path) do
