@@ -10,7 +10,7 @@ defmodule Sweetconfig do
       worker(Sweetconfig.Pubsub, [@pubsub_server])
     ]
 
-    :sweetconfig = :ets.new(:sweetconfig, [:named_table, {:read_concurrency, true}, :public, :protected])
+    :sweetconfig = :ets.new(:sweetconfig, [:named_table, {:read_concurrency, true}, :public])
     _ = Sweetconfig.Utils.load_configs(:silent)
 
     opts = [strategy: :one_for_one, name: Sweetconfig.Supervisor]
