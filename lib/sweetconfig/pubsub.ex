@@ -20,6 +20,10 @@ defmodule Sweetconfig.Pubsub do
     GenServer.call(server, {:get_subscribers, root})
   end
 
+  def drop_subscribers(server) do
+    GenServer.cast(server, :drop_subscribers)
+  end
+
   ###
 
   def handle_call({:subscribe, path, events, handler}, _from, state(subscribers: subs, monitors: mons)=state) do
@@ -37,6 +41,11 @@ defmodule Sweetconfig.Pubsub do
   def handle_call({:get_subscribers, root}, _from, state(subscribers: subs)=state) do
     matching_subs = Enum.filter(subs, fn {[h|_], _} -> h == root end)
     {:reply, matching_subs, state}
+  end
+
+  def handle_cast(:drop_subscribers, state(subscribers: subs, monitors: mons)=state) do
+    Enum.each(mons, &Process.demonitor/1)
+    {:noreply, state()}
   end
 
   def handle_info({:DOWN, monitor, _type, pid, _info}, state(subscribers: subs, monitors: mons)=state) do

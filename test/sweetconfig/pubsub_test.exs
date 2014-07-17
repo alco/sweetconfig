@@ -6,6 +6,7 @@ defmodule SweetconfigTest.PubsubTest do
   setup do
     on_exit fn ->
       Sweetconfig.purge()
+      Sweetconfig.Pubsub.drop_subscribers(Sweetconfig.Pubsub)
     end
     Sweetconfig.Utils.load_configs :silent
     :ok
@@ -85,5 +86,33 @@ defmodule SweetconfigTest.PubsubTest do
     :timer.sleep(50)
     refute Process.alive?(pid)
     assert [] = Sweetconfig.get_subscribers(:exrabbit)
+  end
+
+  test "function callback" do
+    import ExUnit.CaptureIO
+
+    Sweetconfig.subscribe [:exrabbit, :keno_queue, :host], :changed, &dump_change/1
+    assert capture_io(fn ->
+      load_from_fixture "changed"
+    end) == ~s([:exrabbit, :keno_queue, :host]\nold: '127.0.0.1', new: "localhost")
+  end
+
+  test "mfa callback" do
+    import ExUnit.CaptureIO
+
+    Sweetconfig.subscribe [:exrabbit, :keno_queue, :host], :changed, {__MODULE__, :dump_it, [:foo]}
+    assert capture_io(fn ->
+      load_from_fixture "changed"
+    end) == ~s([:exrabbit, :keno_queue, :host]\nold and new: '127.0.0.1' "localhost")
+  end
+
+  defp dump_change({path, {:changed, old, new}}) do
+    IO.inspect path
+    IO.write "old: #{inspect old}, new: #{inspect new}"
+  end
+
+  def dump_it(:foo, {path, {:changed, old, new}}) do
+    IO.inspect path
+    IO.write "old and new: #{inspect old} #{inspect new}"
   end
 end
