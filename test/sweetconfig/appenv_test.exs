@@ -56,5 +56,9 @@ defmodule SweetconfigTest.AppEnvTest do
 
     assert Sweetconfig.get([:sweetconfig, :test_key]) == "value"
   end
+
+  test "non-existent app" do
+    assert Sweetconfig.get(:"no such app will EVER be made") == nil
+  end
 end
 
