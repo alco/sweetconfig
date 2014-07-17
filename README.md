@@ -12,12 +12,9 @@ config :sweetconfig,
 	app: :name_of_your_application
 ```
 
-
 Include `:sweetconfig` into your app deps list.
 
-
-Now you can read configuration from any point in your app like this:
-
+Now you can read configuration at any point in your app like this:
 
 ```elixir
 Sweetconfig.get :somekey
@@ -28,7 +25,7 @@ Sweetconfig.get :whatever, :default_value
 
 ## Subscribing to changes
 
-It is possible to get notifications when a certain config values has changed
+It is possible to get notifications when a certain config value has changed
 during config reload.
 
 ```elixir
