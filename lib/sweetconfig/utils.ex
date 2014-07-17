@@ -21,9 +21,11 @@ defmodule Sweetconfig.Utils do
   defp do_load_configs(path, silent) do
     case File.ls(path) do
       {:ok, files} ->
-        Enum.map(files, fn file -> path <> "/" <> file end)
-        |> process_files
-        |> push_to_ets(silent)
+        configs =
+          Enum.map(files, fn file -> path <> "/" <> file end)
+          |> process_files
+          |> push_to_ets(silent)
+          {:ok, configs}
       {:error, _} -> {:error, :no_configs}
     end
   end
@@ -37,41 +39,12 @@ defmodule Sweetconfig.Utils do
     Application.get_env(:sweetconfig, :app, @app)
   end
 
-  defp pre_process(int) when is_integer(int), do: int
-  defp pre_process(atom) when is_atom(atom), do: atom
-  defp pre_process(bin) when is_binary(bin), do: bin
-  defp pre_process(list) when is_list(list) do
-    for el <- list, into: [] do
-      pre_process(el)
-    end
-  end
-  defp pre_process(%{type: type, value: value}) when is_binary(value) do
-    case type do
-      :list -> :erlang.binary_to_list(value)
-      :binary -> value
-    end
-  end
-  defp pre_process(%{type: type, value: value}) when is_atom(value) do
-    case type do
-      :list -> :erlang.atom_to_list(value)
-      :binary -> :erlang.atom_to_binary(value, :utf8)
-    end
-  end
-  defp pre_process(map) when is_map(map) do
-    for {k, v} <- map, into: %{} do
-      {k, pre_process(v)}
-    end
-  end
-  defp pre_process({k,v}) do
-    pre_process({k, pre_process(v)})
-  end
-
   defp push_to_ets([], _), do: []
   defp push_to_ets([configs], silent) do
     for {key, value} <- configs do
-      new_dict = pre_process(value)
+      new_dict = value
       old_dict = case :ets.lookup(:sweetconfig, key) do
-        []    -> nil
+        []        -> nil
         [{_,val}] -> val
       end
       :ets.insert(:sweetconfig, {key, new_dict})
@@ -91,7 +64,7 @@ defmodule Sweetconfig.Utils do
   end
 
   defp load_config(file) do
-    case :yaml.load_file(file, [:implicit_atoms]) do
+    case :yaml.load_file(file, [:implicit_atoms, schema: :yaml_schema_elixir]) do
       {:ok, data} -> data
       err -> raise "Failed to parse configuration file #{file} with error #{inspect err}"
     end

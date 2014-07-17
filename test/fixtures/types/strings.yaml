@@ -1,0 +1,11 @@
+list: &L [1, atom, [2, 3]]
+seq:
+ - *L
+ - 4
+ - 5
+charlist: 'hello world'
+strings:
+ - "binary"
+ - "юникод работает?"
+ - 'юникод работает'
+ - ['three', 'more', 'charlists']

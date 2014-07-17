@@ -1,0 +1,10 @@
+simple_key:
+ hello: "world"
+ "spaces in key": "..."
+ 123: 456
+ 'charlist key': "..."
+test:
+ ? 'key'
+ : value
+ ? 123
+ : "number"

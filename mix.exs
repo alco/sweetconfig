@@ -15,7 +15,7 @@ defmodule Sweetconfig.Mixfile do
 
   defp deps do
     [
-      {:yamler, github: "goertzenator/yamler", branch: "mapping_as_map"}
+      {:yamler, github: "alco/yamler", branch: "elixir-types"}
     ]
   end
 end

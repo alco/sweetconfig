@@ -1,0 +1,8 @@
+tuples:
+ - {}
+ - {'hello'}
+ - {a, "b", 13}
+
+keywords:
+ - [{key, val}]
+ - [{hi, "bye"}, {nested, [{a, b}]}, {do, 'dont'}]

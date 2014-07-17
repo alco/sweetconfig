@@ -1,0 +1,8 @@
+nums:
+ - 1
+ - 2
+ - 3.0
+ - 4.0e+5
+ - 0xFF
+
+atoms: [atom, nil, error, ok]
