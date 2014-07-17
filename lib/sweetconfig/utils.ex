@@ -15,6 +15,9 @@ defmodule Sweetconfig.Utils do
     do_load_configs(path, true)
   end
 
+  def lookup_config(config, []), do: config
+  def lookup_config(config, path), do: get_in(config, path)
+
   defp do_load_configs(path, silent) do
     case File.ls(path) do
       {:ok, files} ->
@@ -31,7 +34,7 @@ defmodule Sweetconfig.Utils do
 
   @app Mix.Project.config[:app]
   defp get_config_app do
-    :application.get_all_env(:sweetconfig)[:app] || @app
+    Application.get_env(:sweetconfig, :app, @app)
   end
 
   defp pre_process(int) when is_integer(int), do: int
@@ -114,8 +117,8 @@ defmodule Sweetconfig.Utils do
   end
 
   defp process_handler({[_|path]=fullpath, handlers}, old_dict, new_dict) do
-    old_val = get_with_path(old_dict, path)
-    new_val = get_with_path(new_dict, path)
+    old_val = lookup_config(old_dict, path)
+    new_val = lookup_config(new_dict, path)
     if old_val != new_val do
       change = case {old_val, new_val} do
         {nil, _} -> {:added, new_val}
@@ -125,9 +128,6 @@ defmodule Sweetconfig.Utils do
       notify_handlers(handlers, fullpath, change)
     end
   end
-
-  defp get_with_path(val, []), do: val
-  defp get_with_path(val, path), do: get_in(val, path)
 
   defp notify_handlers(handlers, path, change) do
     handlers

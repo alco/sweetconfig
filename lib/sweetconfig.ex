@@ -17,14 +17,20 @@ defmodule Sweetconfig do
     Supervisor.start_link(children, opts)
   end
 
+  @doc """
+  Remove all loaded config values.
+  """
   def purge() do
     :ets.delete_all_objects :sweetconfig
   end
 
-  @type config :: [{term,term}]
+
+  alias Sweetconfig.Utils
+
+  @type config :: %{}
 
   @doc """
-  Performs `get/1` and returns default values in case nothing is found for the
+  Perform `get/1` and return default config in case nothing is found for the
   given path.
   """
   @spec get([term], config) :: config
@@ -33,32 +39,30 @@ defmodule Sweetconfig do
   end
 
   @doc """
-  Looks up the path in the config denoted by the key in the head of the list.
+  Look up the path in the config denoted by the key in the head of the list.
+
+  If no config is found, the key is treated as an app name and the application
+  environment is checked instead.
   """
-  @spec get([term]) :: nil | config
+  @spec get([term]) :: nil | config | term
   def get([root | path]) do
     case :ets.lookup(:sweetconfig, root) do
-      [{^root, config}] -> lookup_config(config, path)
-      [] ->
-        case :application.get_all_env(root) do
-          [] -> nil
-          config -> lookup_config(config, path)
-        end
+      [{^root, config}] -> Utils.lookup_config(config, path)
+      [] -> get_app_config(root, path)
     end
   end
 
   @doc """
-  Looks up a single key.
+  Look up a single key that is normally an app name.
+
+  If there is no corresponding config, the `app`'s application environment is
+  returned as a map.
   """
-  @spec get(term) :: nil | config
-  def get(key) do
-    case :ets.lookup(:sweetconfig, key) do
-      [{^key, config}] -> config
-      [] ->
-        case :application.get_all_env(key) do
-          [] -> nil
-          config -> config
-        end
+  @spec get(term) :: nil | config | term
+  def get(app) do
+    case :ets.lookup(:sweetconfig, app) do
+      [{_, config}] -> config
+      [] -> get_app_config(app, [])
     end
   end
 
@@ -75,10 +79,10 @@ defmodule Sweetconfig do
   `{<path>, <change>}`.
 
   If the 2nd argument is a tuple `{<module>, <function>, <args>}`, the function
-  `<module>.<function>` will be called with `<args>` after `{<path>, <change>}`
+  `<module>.<function>` will be called with `<args>` with `{<path>, <change>}`
   appended to the args.
 
-  `<change>` can be one of the following (depending on the value of the
+  `<change>` will be one of the following (depending on the value of the
   `events` argument):
 
     * `{:changed, old_val, new_val}` – the value was changed
@@ -109,8 +113,14 @@ defmodule Sweetconfig do
 
   ###
 
-  defp lookup_config(config, []), do: config
-  defp lookup_config(config, path) do
-    get_in(config, path)
+  defp get_app_config(app, []) do
+    case Application.get_all_env(app) do
+      [] -> nil
+      env -> Enum.into(env, %{})
+    end
+  end
+
+  defp get_app_config(app, [key|path]) do
+    Application.get_env(app, key) |> Utils.lookup_config(path)
   end
 end
