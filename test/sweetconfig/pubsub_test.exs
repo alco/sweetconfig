@@ -1,6 +1,8 @@
 defmodule SweetconfigTest.PubsubTest do
   use ExUnit.Case
 
+  import SweetconfigTest.Helpers
+
   setup do
     on_exit fn ->
       Sweetconfig.purge()
@@ -83,10 +85,5 @@ defmodule SweetconfigTest.PubsubTest do
     :timer.sleep(50)
     refute Process.alive?(pid)
     assert [] = Sweetconfig.get_subscribers(:exrabbit)
-  end
-
-  defp load_from_fixture(name) do
-    path = Path.join([Path.expand("..", __DIR__), "fixtures", name])
-    Sweetconfig.Utils.load_configs(path)
   end
 end
