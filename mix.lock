@@ -1,1 +1,1 @@
-%{"yamler": {:git, "git://github.com/alco/yamler.git", "843e5fa779e034294338bd90103f67bf307bc721", [branch: "elixir-types"]}}
+%{"yamler": {:git, "git://github.com/alco/yamler.git", "0b013b3de3c110ef07a714c150403ec6b5eb91fd", [branch: "elixir-types"]}}

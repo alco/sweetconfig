@@ -14,7 +14,7 @@ defmodule SweetconfigTest.TypeTest do
     assert Sweetconfig.get(:implicit) == %{
       :hello => :world,
       "good-bye" => "cruel world",
-      :alias => "File.Stat",
+      :alias => File.Stat,
       :function => "String.slice",
     }
   end
