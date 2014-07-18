@@ -53,11 +53,7 @@ defmodule Sweetconfig do
   returned as a map.
   """
   @spec get(term) :: term
-  def get(app) do
-    case :ets.lookup(:sweetconfig, app) do
-      [{_, config}] -> config
-      [] -> get_app_config(app, [])
-    end
+  def get(app) when not is_list(app), do: get([app])
   end
 
   @doc """
