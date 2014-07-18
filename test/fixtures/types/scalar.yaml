@@ -6,3 +6,9 @@ nums:
  - 0xFF
 
 atoms: [atom, nil, error, ok]
+
+implicit:
+ hello: world
+ good-bye: cruel world
+ alias: File.Stat
+ function: String.slice

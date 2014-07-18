@@ -11,6 +11,12 @@ defmodule SweetconfigTest.TypeTest do
   test "basic scalars" do
     assert Sweetconfig.get(:nums) === [1, 2, 3.0, 4.0e5, 0xFF]
     assert Sweetconfig.get(:atoms) == [:atom, :nil, :error, :ok]
+    assert Sweetconfig.get(:implicit) == %{
+      :hello => :world,
+      "good-bye" => "cruel world",
+      :alias => "File.Stat",
+      :function => "String.slice",
+    }
   end
 
   test "lists, charlists, binaries" do
