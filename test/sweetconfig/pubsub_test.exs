@@ -6,7 +6,7 @@ defmodule SweetconfigTest.PubsubTest do
   setup do
     on_exit fn ->
       Sweetconfig.purge()
-      Sweetconfig.Pubsub.drop_subscribers(Sweetconfig.Pubsub)
+      Sweetconfig.drop_subscribers()
     end
     Sweetconfig.Utils.load_configs :silent
     :ok
@@ -86,6 +86,31 @@ defmodule SweetconfigTest.PubsubTest do
     :timer.sleep(50)
     refute Process.alive?(pid)
     assert [] = Sweetconfig.get_subscribers(:exrabbit)
+  end
+
+  test "unsubscribe ref" do
+    Sweetconfig.subscribe [:exrabbit, :test_queue, :host], :all, self()
+    ref = Sweetconfig.subscribe [:exrabbit, :test_queue], :all, self()
+    refute_receive _
+
+    Sweetconfig.unsubscribe(ref)
+
+    load_from_fixture "changed"
+
+    assert_receive {Sweetconfig.Pubsub, [:exrabbit, :test_queue, :host], {:removed, '127.0.0.1'}}
+    refute_receive _
+  end
+
+  test "unsubscribe pid" do
+    Sweetconfig.subscribe [:exrabbit, :test_queue, :host], :all, self()
+    Sweetconfig.subscribe [:exrabbit, :test_queue], :all, self()
+    refute_receive _
+
+    Sweetconfig.unsubscribe(self())
+
+    load_from_fixture "changed"
+
+    refute_receive _
   end
 
   test "function callback" do

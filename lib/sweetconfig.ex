@@ -100,6 +100,29 @@ defmodule Sweetconfig do
   end
 
   @doc """
+  Remove a subscriber identified by the given pid or ref.
+
+  The argument should be
+
+    1) the ref returned from a previous call to `subscribe()`
+
+    2) a pid of a subscribed process, in which case all subscription paths for
+       that process will be removed
+  """
+  def unsubscribe(pid_or_ref) do
+    Sweetconfig.Pubsub.unsubscribe(@pubsub_server, pid_or_ref)
+  end
+
+  @doc """
+  Remove all subscribers registered for the given path.
+
+  Passing `:all` instead of a list will remove subscribers for all paths.
+  """
+  def drop_subscribers(path \\ :all) do
+    Sweetconfig.Pubsub.drop_subscribers(@pubsub_server, path)
+  end
+
+  @doc """
   Remove all loaded config values.
   """
   def purge() do

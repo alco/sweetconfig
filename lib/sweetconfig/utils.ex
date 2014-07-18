@@ -119,8 +119,8 @@ defmodule Sweetconfig.Utils do
 
   defp notify_handlers(handlers, path, change) do
     handlers
-    |> Enum.filter(fn {_, events} -> change_is_valid(change, events) end)
-    |> Enum.each(fn {handler, _} ->
+    |> Enum.filter(fn {_, events, _} -> change_is_valid(change, events) end)
+    |> Enum.each(fn {handler, _, _} ->
       Sweetconfig.Pubsub.notify_subscriber(handler, path, change)
     end)
   end
