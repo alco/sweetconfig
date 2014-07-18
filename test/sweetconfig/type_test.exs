@@ -31,6 +31,15 @@ defmodule SweetconfigTest.TypeTest do
     assert Sweetconfig.get(:test) == %{'key' => :value, 123 => "number"}
   end
 
+  test "showcase" do
+    assert Sweetconfig.get(:showcase) ==
+      %{
+        map: %{:a => "keys are atoms", "b-c" => "unless they have non-identifier characters"},
+        list: ["this is a binary", 'this is a char list', [:these, :are, :atoms], Elixir.Alias],
+        implicit: [:can, "be ambiguous"],
+      }
+  end
+
   #test "keyword list" do
   #  assert Sweetconfig.get(:tuples) == [{}, {'hello'}, {:a,"b",13}]
   #  assert Sweetconfig.get(:keywords) == [[key: :val], [hi: "bye", nested: [a: :b], do: 'dont']]

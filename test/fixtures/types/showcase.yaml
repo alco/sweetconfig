@@ -1,0 +1,14 @@
+showcase:
+ map:
+  a: "keys are atoms"
+  b-c: "unless they have non-identifier characters"
+ 
+ list:
+  - "this is a binary"
+  - 'this is a char list'
+  - [these, are, atoms]
+  - Elixir.Alias
+ 
+ implicit:
+  - can
+  - be ambiguous
