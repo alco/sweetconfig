@@ -3,6 +3,7 @@ defmodule Sweetconfig do
 
   @pubsub_server Sweetconfig.Pubsub
 
+  @doc false
   def start(_type, _args) do
     import Supervisor.Spec
 
@@ -15,13 +16,6 @@ defmodule Sweetconfig do
 
     opts = [strategy: :one_for_one, name: Sweetconfig.Supervisor]
     Supervisor.start_link(children, opts)
-  end
-
-  @doc """
-  Remove all loaded config values.
-  """
-  def purge() do
-    :ets.delete_all_objects :sweetconfig
   end
 
 
@@ -103,6 +97,13 @@ defmodule Sweetconfig do
     end
     unless events == :all, do: events = List.wrap(events)
     Sweetconfig.Pubsub.subscribe(@pubsub_server, List.wrap(path), events, handler)
+  end
+
+  @doc """
+  Remove all loaded config values.
+  """
+  def purge() do
+    :ets.delete_all_objects :sweetconfig
   end
 
   @doc false

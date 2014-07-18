@@ -1,22 +1,37 @@
 defmodule Sweetconfig.Utils do
+  @doc """
+  Reload configs from the priv/ directory.
+  """
   def load_configs() do
     do_load_configs(priv_path, false)
   end
 
+  @doc """
+  Reload configs from the priv/ directory, do not notify subscribers.
+  """
   def load_configs(:silent) do
     do_load_configs(priv_path, true)
   end
 
+  @doc """
+  Reload configs from the specified path.
+  """
   def load_configs(path) when is_binary(path) do
     do_load_configs(path, false)
   end
 
+  @doc """
+  Reload configs from the specified path, do not notify the subscribers.
+  """
   def load_configs(path, :silent) when is_binary(path) do
     do_load_configs(path, true)
   end
 
+  @doc false
   def lookup_config(config, []), do: config
   def lookup_config(config, path), do: get_in(config, path)
+
+  ###
 
   defp do_load_configs(path, silent) do
     case File.ls(path) do
