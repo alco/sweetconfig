@@ -41,8 +41,8 @@ Sweetconfig.get :whatever, :default_value
 
 ## YAML syntax extensions
 
-The YAML parser used by Sweetconfig extends the syntax in a non-conforming way
-to provide some conveniences for Elixir.
+Sweetconfig extends YAML syntax in a non-conforming way to provide some
+conveniences for Elixir.
 
 ```yaml
 map:
