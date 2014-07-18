@@ -21,15 +21,13 @@ defmodule Sweetconfig do
 
   alias Sweetconfig.Utils
 
-  @type config :: %{}
-
   @doc """
-  Perform `get/1` and return default config in case nothing is found for the
-  given path.
+  Perform `get/1` and return the supplied default in case nothing is found for
+  the given path.
   """
-  @spec get([term], config) :: config
-  def get(path, defaults) do
-    get(path) || defaults
+  @spec get([term], term) :: term
+  def get(path, default) do
+    get(path) || default
   end
 
   @doc """
@@ -37,8 +35,10 @@ defmodule Sweetconfig do
 
   If no config is found, the key is treated as an app name and the application
   environment is checked instead.
+
+  In case nothing is found, `nil` is returned.
   """
-  @spec get([term]) :: nil | config | term
+  @spec get([term]) :: term
   def get([root | path]) do
     case :ets.lookup(:sweetconfig, root) do
       [{^root, config}] -> Utils.lookup_config(config, path)
@@ -52,7 +52,7 @@ defmodule Sweetconfig do
   If there is no corresponding config, the `app`'s application environment is
   returned as a map.
   """
-  @spec get(term) :: nil | config | term
+  @spec get(term) :: term
   def get(app) do
     case :ets.lookup(:sweetconfig, app) do
       [{_, config}] -> config
