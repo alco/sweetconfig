@@ -14,7 +14,7 @@ defmodule SweetconfigTest.PubsubTest do
 
   test "new value" do
     Sweetconfig.subscribe [:cqlex, :new_key], [:added, :changed], self()
-    Sweetconfig.subscribe [:new_section], [:added], self()
+    Sweetconfig.subscribe :new_section, [:added], self()
     Sweetconfig.subscribe [:new_section, :creds, :username], :all, self()
     refute_receive _
 

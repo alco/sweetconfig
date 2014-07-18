@@ -102,7 +102,7 @@ defmodule Sweetconfig do
       {_mod, _func, _args}=mfa -> {:mfa, mfa}
     end
     unless events == :all, do: events = List.wrap(events)
-    Sweetconfig.Pubsub.subscribe(@pubsub_server, path, events, handler)
+    Sweetconfig.Pubsub.subscribe(@pubsub_server, List.wrap(path), events, handler)
   end
 
   @doc false
