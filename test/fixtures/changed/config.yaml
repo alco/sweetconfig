@@ -1,0 +1,6 @@
+cqlex: nil
+new_section:
+ hello: "world"
+exrabbit:
+ keno_queue:
+  host: "localhost"

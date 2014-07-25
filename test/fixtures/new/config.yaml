@@ -1,0 +1,5 @@
+cqlex:
+ new_key: "value"
+new_section:
+ creds:
+  username: "somename"
