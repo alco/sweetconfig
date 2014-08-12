@@ -133,3 +133,8 @@ or by setting the global `write_to_env` option in `config.exs`
 ```elixir
 config :sweetconfig, write_to_env: [app_name: [:key1, :key2]]
 ```
+
+
+## License
+
+This software is licensed under [the MIT license](LICENSE).
