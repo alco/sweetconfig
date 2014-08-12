@@ -12,7 +12,7 @@ defmodule Sweetconfig do
     ]
 
     :sweetconfig = :ets.new(:sweetconfig, [:named_table, {:read_concurrency, true}, :public])
-    _ = Sweetconfig.Utils.load_configs(:silent)
+    _ = Sweetconfig.Utils.load_configs(silent: true)
 
     opts = [strategy: :one_for_one, name: Sweetconfig.Supervisor]
     Supervisor.start_link(children, opts)

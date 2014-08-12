@@ -4,7 +4,7 @@ defmodule SweetconfigTest.AppEnvTest do
   import SweetconfigTest.Helpers
 
   setup_all do
-    Sweetconfig.Utils.load_configs :silent
+    Sweetconfig.Utils.load_configs silent: true
     :ok
   end
 
@@ -55,6 +55,16 @@ defmodule SweetconfigTest.AppEnvTest do
     assert Sweetconfig.get([:sweetconfig, :other]) == nil
 
     assert Sweetconfig.get([:sweetconfig, :test_key]) == "value"
+  end
+
+  test "write to env" do
+    assert Application.get_env(:sweetconfig, :test_key) == nil
+    assert Application.get_env(:sweetconfig, :nested) == nil
+
+    load_from_fixture "appenv", write_to_env: [sweetconfig: [:test_key]]
+
+    assert Application.get_env(:sweetconfig, :test_key) == "value"
+    assert Application.get_env(:sweetconfig, :nested) == nil
   end
 
   test "non-existent app" do

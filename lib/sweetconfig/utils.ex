@@ -1,30 +1,33 @@
 defmodule Sweetconfig.Utils do
   @doc """
-  Reload configs from the priv/ directory.
+  Reload configs from the config directory with default options.
   """
   def load_configs() do
-    do_load_configs(priv_path, false)
+    load_configs([])
   end
 
   @doc """
-  Reload configs from the priv/ directory, do not notify subscribers.
+  Reload configs from the config directory.
+
+  ## Options
+
+    * `silent: <boolean>` - whether to notify the subscribers of the changes;
+      default: `false`
+
+    * `write_to_env: <keyword list>` - for each app specify the list of keys
+      that will be written to application env; default: `[]` (overridable in
+      config.exs)
+
   """
-  def load_configs(:silent) do
-    do_load_configs(priv_path, true)
+  def load_configs(options) when is_list(options) do
+    do_load_configs(config_path, options)
   end
 
   @doc """
-  Reload configs from the specified path.
+  Reload configs from the specified directory.
   """
-  def load_configs(path) when is_binary(path) do
-    do_load_configs(path, false)
-  end
-
-  @doc """
-  Reload configs from the specified path, do not notify the subscribers.
-  """
-  def load_configs(path, :silent) when is_binary(path) do
-    do_load_configs(path, true)
+  def load_configs(path, options \\ []) when is_binary(path) and is_list(options) do
+    do_load_configs(path, options)
   end
 
   @doc false
@@ -33,20 +36,33 @@ defmodule Sweetconfig.Utils do
 
   ###
 
-  defp do_load_configs(path, silent) do
+  defp do_load_configs(path, options) do
+    silent = Keyword.get(options, :silent, false)
+    env_keys =
+      case Keyword.fetch(options, :write_to_env) do
+        {:ok, list} -> list
+        :error -> Application.get_env(:sweetconfig, :write_to_env, [])
+      end
+      |> Enum.map(fn {app, keys} -> {app, Enum.into(keys, HashSet.new)} end)
+      |> Enum.into(%{})
+
     case File.ls(path) do
       {:ok, files} ->
         configs =
           Enum.map(files, fn file -> path <> "/" <> file end)
           |> process_files
           |> push_to_ets(silent)
+          |> push_to_env(env_keys)
           {:ok, configs}
       {:error, _} -> {:error, :no_configs}
     end
   end
 
-  defp priv_path do
-    :code.priv_dir(get_config_app) |> List.to_string
+  defp config_path do
+    case Application.fetch_env(:sweetconfig, :dir) do
+      {:ok, dir} -> dir
+      :error -> :code.priv_dir(get_config_app) |> List.to_string
+    end
   end
 
   @app Mix.Project.config[:app]
@@ -75,6 +91,23 @@ defmodule Sweetconfig.Utils do
     case Enum.all?(configs, &is_map/1) do
       true -> [Enum.reduce(configs, %{}, &Map.merge/2)] |> push_to_ets(silent)
       false -> raise "Strange configuration structure: #{inspect configs}"
+    end
+  end
+
+  defp push_to_env(configs, env_keys) do
+    Enum.each(env_keys, fn {app, keys} ->
+      update_env(app, keys, Map.fetch(configs, app))
+    end)
+    configs
+  end
+
+  defp update_env(_, _, :error), do: nil
+  defp update_env(app, keys, {:ok, config}) do
+    for key <- keys do
+      case Map.fetch(config, key) do
+        {:ok, value} -> Application.put_env(app, key, value)
+        :error -> nil
+      end
     end
   end
 

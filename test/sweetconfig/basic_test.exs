@@ -2,7 +2,7 @@ defmodule SweetconfigTest.BasicTest do
   use ExUnit.Case
 
   setup_all do
-    Sweetconfig.Utils.load_configs :silent
+    Sweetconfig.Utils.load_configs silent: true
     :ok
   end
 

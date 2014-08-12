@@ -81,6 +81,7 @@ The config file above will be parsed into the following Elixir data:
 }
 ```
 
+
 ## Subscribing to changes
 
 It is possible to get notifications when a certain config value changes
@@ -112,4 +113,23 @@ receive do
     IO.puts "New value at path: #{inspect path}"
     IO.inspect new
 end
+```
+
+
+## Updating application env
+
+By default Sweetconfig keeps loaded configs in its private ETS table. It is
+possible to make it write selected configs to application env by passing a
+corresponding option to `load_configs`
+
+```elixir
+Sweetconfig.load_configs(write_to_env: [app_name: [:key1, :key2]])
+
+value = Application.get_env(:app_name, :key1)
+```
+
+or by setting the global `write_to_env` option in `config.exs`
+
+```elixir
+config :sweetconfig, write_to_env: [app_name: [:key1, :key2]]
 ```

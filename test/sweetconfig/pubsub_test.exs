@@ -8,7 +8,7 @@ defmodule SweetconfigTest.PubsubTest do
       Sweetconfig.purge()
       Sweetconfig.drop_subscribers()
     end
-    Sweetconfig.Utils.load_configs :silent
+    Sweetconfig.Utils.load_configs silent: true
     :ok
   end
 
