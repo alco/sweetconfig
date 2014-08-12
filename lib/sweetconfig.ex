@@ -54,7 +54,6 @@ defmodule Sweetconfig do
   """
   @spec get(term) :: term
   def get(app) when not is_list(app), do: get([app])
-  end
 
   @doc """
   Subscribe to notifications emitted whenever the specified config value
